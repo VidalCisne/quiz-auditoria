@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz · Auditoría Informática</title>
+<style>
+:root{--bg:#faf6f0;--card:#fffdf9;--tx:#2b2520;--mu:#7a6e63;--bd:#e6dccf;--ac:#b4532a;--ok:#3f7d4e;--okb:#e6f1e8;--no:#b23a3a;--nob:#f6e4e2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e1a17;--card:#28231f;--tx:#efe7dc;--mu:#a39787;--bd:#3a332d;--ac:#e08a5f;--ok:#7fc08f;--okb:#22342a;--no:#e27d7d;--nob:#3a2423}}
+:root[data-theme="dark"]{--bg:#1e1a17;--card:#28231f;--tx:#efe7dc;--mu:#a39787;--bd:#3a332d;--ac:#e08a5f;--ok:#7fc08f;--okb:#22342a;--no:#e27d7d;--nob:#3a2423}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Georgia,'Times New Roman',serif}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:26px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--mu);margin:0 0 24px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
+.chip,.opt,.btn{font:inherit;color:inherit;cursor:pointer}
+.chip{border:1px solid var(--bd);background:transparent;border-radius:999px;padding:8px 14px;font-size:14px}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:11px 20px;font-size:15px}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar{height:4px;background:var(--bd);border-radius:2px;margin:0 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .25s}
+.meta{display:flex;justify-content:space-between;color:var(--mu);font-size:13px;margin-bottom:18px}
+.q{font-size:19px;margin:0 0 16px;line-height:1.4}
+.opt{display:block;width:100%;text-align:left;background:transparent;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin:0 0 9px;font-size:15.5px}
+.opt:hover:not([disabled]){border-color:var(--ac)}
+.opt.ok{background:var(--okb);border-color:var(--ok)}
+.opt.no{background:var(--nob);border-color:var(--no)}
+.opt[disabled]{cursor:default}
+.big{font-size:44px;margin:4px 0;font-weight:600;color:var(--ac)}
+.rev{border-top:1px solid var(--bd);padding:12px 0;font-size:14.5px}
+.rev b{display:block;margin-bottom:3px}
+.rev .g{color:var(--ok)}.rev .b{color:var(--no)}
+.hide{display:none}
+small{color:var(--mu)}
+</style>
+</head>
+<body>
+<main>
+<h1>Auditoría Informática</h1>
+<p class="sub">Quiz de estudio · Capítulos 1 a 4 · IA 241</p>
+
+<div id="home" class="card">
+  <b>Elige los capítulos</b>
+  <div class="chips" id="chips"></div>
+  <b>Cantidad de preguntas</b>
+  <div class="chips" id="counts"></div>
+  <button class="btn" id="go">Comenzar</button>
+</div>
+
+<div id="quiz" class="hide">
+  <div class="bar"><i id="pb"></i></div>
+  <div class="meta"><span id="pn"></span><span id="sc"></span></div>
+  <div class="card">
+    <p class="q" id="qt"></p>
+    <div id="opts"></div>
+    <div class="row" style="margin-top:10px"><button class="btn hide" id="nx">Siguiente</button></div>
+  </div>
+</div>
+
+<div id="end" class="card hide">
+  <small>Resultado</small>
+  <div class="big" id="res"></div>
+  <p id="msg" style="margin:0 0 16px"></p>
+  <div class="row"><button class="btn" id="again">Nuevo quiz</button><button class="btn ghost hide" id="retry">Repetir falladas</button></div>
+  <div id="rv" style="margin-top:18px"></div>
+</div>
+</main>
+
+<script>
+var CH={1:"Cap. 1 · Auditoría",2:"Cap. 2 · Metodología",3:"Cap. 3 · Auditoría informática",4:"Cap. 4 · Auditoría física"};
+// [capítulo, pregunta, correcta, "incorrecta|incorrecta|incorrecta"]
+var D=[
+[1,"Según la ISO 19011, auditar es:","Comprobar, en el sitio donde se ejecutan los procesos, el cumplimiento de los requisitos de una norma","Revisar únicamente los estados financieros|Sancionar a los responsables de los errores|Diseñar el sistema de gestión de la organización"],
+[1,"¿En cuántos capítulos está dividida la norma ISO 19011?","7","5|6|10"],
+[1,"Examen crítico y sistemático de la eficacia, eficiencia y economía con que se usan los recursos para recomendar mejoras de gestión:","Auditoría operativa","Auditoría de producto|Auditoría de cumplimiento|Auditoría de procesos"],
+[1,"Inspección de los procesos de fabricación de un producto o prestación de un servicio para verificar los requisitos de calidad del cliente:","Auditoría de producto","Auditoría operativa|Auditoría del sistema|Auditoría financiera"],
+[1,"La auditoría que determina si se han mantenido los acuerdos contractuales es la de:","Cumplimiento","Producto|Procesos|Sistema"],
+[1,"¿Qué caracteriza a la auditoría interna?","La realiza un profesional con vínculos laborales con la organización","La realiza un auditor sin vínculos laborales|La ejercen solo agencias gubernamentales|Su dictamen valida la información ante terceros"],
+[1,"¿Qué caracteriza a la auditoría externa?","La realiza un auditor sin vínculos laborales con la empresa","La realiza personal de planta de la empresa|Se limita al departamento de contabilidad|No emite opinión independiente"],
+[1,"La rama más amplia de la auditoría, ejercida por agencias gubernamentales, es la:","Auditoría gubernamental","Auditoría interna|Auditoría externa|Auditoría operativa"],
+[1,"¿Cuál NO es uno de los seis principios de auditoría?","Rentabilidad","Integridad|Confidencialidad|Independencia"],
+[1,"Principio que exige discreción para proteger la información obtenida y no usarla en beneficio personal:","Confidencialidad","Integridad|Profesionalismo|Independencia"],
+[1,"Principio que trata sobre la imparcialidad y objetividad en las conclusiones de auditoría:","Independencia","Integridad|Profesionalismo|Presentación de informes veraces"],
+[1,"La evidencia debe ser repetible, cuantificable y comprobable. ¿A qué principio corresponde?","Enfoque basado en evidencia","Integridad|Profesionalismo|Confidencialidad"],
+[1,"¿Cuál es un objetivo básico del control interno?","Proteger los activos de la empresa","Aumentar las ventas anuales|Reducir el personal|Sustituir la auditoría externa"],
+[1,"¿Cuál es un objetivo general del control interno?","Salvaguarda física","Publicidad|Reclutamiento de personal|Planeación estratégica"],
+[1,"Procesar datos de un departamento ficticio y comparar con resultados predeterminados es:","Prueba integral","Simulación|Revisión de acceso|Total aleatorio"],
+[1,"Desarrollar programas de aplicación para una prueba y comparar sus resultados con la aplicación real es:","Simulación","Prueba integral|Revisión de acceso|Entrevista"],
+[1,"Conservar un registro computarizado de accesos a archivos (terminal y usuario) corresponde a:","Revisiones de acceso","Pruebas integrales|Simulación|Totales aleatorios"],
+[1,"Las NAGA están constituidas por ______ normas adoptadas por el ______.","10 · AICPA","7 · ISO|10 · ISACA|6 · AICPA"],
+[1,"El auditor encontró ciertas desviaciones frente al marco normativo de referencia. Su opinión es:","Con salvedades","Adversa o negativa|Sin opinión|Absoluta"],
+[1,"¿Cuál se menciona como habilidad mínima de un auditor informático?","Manejo de hoja de cálculo","Diseño gráfico|Programación en ensamblador|Soldadura de circuitos"],
+[1,"El término «informática» proviene del francés informatique y fue adoptado por la Academia Francesa entre:","1966 y 1967","1940 y 1945|1975 y 1980|1990 y 1995"],
+
+[2,"La metodología de auditoría es:","El procedimiento ordenado y planificado que establece las etapas para alcanzar los objetivos de la auditoría","Una lista de sanciones para la empresa|Un software de análisis financiero|Un informe anual de gerencia"],
+[2,"El diagnóstico de desempeño tiene como propósito:","Determinar el estado actual de la organización y proponer un plan de acción","Calcular impuestos|Contratar al auditor|Cerrar la auditoría"],
+[2,"¿Cuál es una característica de la auditoría interna?","Ser un «control de controles» subordinado solo a la Dirección","Depender del cliente de la empresa|Ser ejecutada por un tercero independiente|Realizarse solo cada diez años"],
+[2,"La primera fase de la metodología es:","Preparación de la auditoría anual, con enfoque basado en el riesgo","Comunicación de resultados|Trabajo de campo|Seguimiento"],
+[2,"Las tres etapas de la segunda fase son:","Planificación del trabajo, ejecución y recolección de evidencias, comunicación de resultados","Planeación, examen, informe|Diagnóstico, capacitación, cierre|Entrevista, cuestionario, informe"],
+[2,"El memorando de planificación define:","Alcance, equipo, presupuesto y cronograma","Solo los hallazgos|Las sanciones|La opinión final"],
+[2,"El trabajo de campo es la etapa de:","Ejecución y recolección de evidencias","Elaboración del memorando|Comunicación de resultados|Capacitación"],
+[2,"Se sugiere dividir el reporte de resultados en tres documentos:","Opinión de auditoría, resumen ejecutivo y recomendaciones","Acta, contrato y factura|Diagnóstico, matriz y programa|Organigrama, manual y plan"],
+[2,"Auditoría solicitada por un cliente de la empresa antes de una compra o contratación:","De segunda parte","De primera parte|De tercera parte|Gubernamental"],
+[2,"Auditoría ejecutada por una parte independiente, como la certificación ISO 9001:","De tercera parte","De segunda parte|Interna|Operativa"],
+[2,"La norma que define la auditoría externa de calidad es:","ISO 9001","ISO 14001|ISO 21378|ISO 27001"],
+[2,"El orden de las etapas de la metodología es:","Planeación, instrumentación, examen, informe, seguimiento","Examen, planeación, informe, instrumentación, seguimiento|Informe, planeación, examen, seguimiento, instrumentación|Instrumentación, planeación, seguimiento, examen, informe"],
+[2,"En la propuesta técnica, el «alcance» se refiere a:","Las áreas de aplicación","Los beneficios esperados|La ruta de acción|El recuento de auditorías previas"],
+[2,"En el programa de trabajo, el «calendario» es:","Las fechas de inicio y término de cada fase","El nombre de la auditoría|El auditor responsable|El universo bajo estudio"],
+[2,"El diagnóstico preliminar se basa en:","La percepción del auditor, sin elementos de juicio documentados","Evidencia documental completa|El informe final|Los estados financieros"],
+[2,"¿Cuál es una técnica de recolección de información?","Observación directa","Dictamen fiscal|Sorteo de muestras|Auditoría cruzada"],
+[2,"Preguntas escritas, predefinidas y secuenciales para obtener información de forma homogénea:","Cuestionarios","Entrevistas|Observación directa|Simulación"],
+[2,"Evidencia obtenida mediante inspección directa, con fotografías, mapas o muestras:","Física","Documental|Testimonial|Analítica"],
+[2,"Evidencia contenida en cartas, contratos, actas, facturas y recibos:","Documental","Física|Testimonial|Analítica"],
+[2,"Evidencia que se obtiene de las declaraciones de personas durante la auditoría:","Testimonial","Física|Documental|Analítica"],
+[2,"Evidencia que comprende cálculos, comparaciones y desagregación de información:","Analítica","Física|Documental|Testimonial"],
+[2,"Evidencia que guarda congruencia entre observaciones, conclusiones y recomendaciones:","Pertinente","Suficiente|Competente|Relevante"],
+[2,"Evidencia necesaria para sustentar hallazgos, conclusiones y recomendaciones:","Suficiente","Competente|Relevante|Pertinente"],
+[2,"Supervisión que se aplica cuando las recomendaciones comprometen a los directivos:","Corporativa","Funcional|Operativa|Externa"],
+[2,"Supervisión que involucra a los jefes de departamento para controlar acciones correctivas:","Funcional","Corporativa|Operativa|Interna"],
+
+[3,"La auditoría en informática es la revisión práctica de los recursos informáticos. ¿Cuál NO es uno de sus elementos?","Presupuesto publicitario","Información|Aplicaciones (software)|Recursos humanos"],
+[3,"Revisión de la actividad administrativa en cuanto a organización, relaciones y cumplimiento de funciones:","Auditoría administrativa","Auditoría contable|Auditoría física|Auditoría fiscal"],
+[3,"Examen de estados financieros para que un contador público independiente emita una opinión:","Auditoría contable","Auditoría administrativa|Auditoría de sistemas|Auditoría operativa"],
+[3,"El antecedente más cercano de la auditoría en informática se ubica en:","Estados Unidos, años cuarenta","Francia, años sesenta|Honduras, años noventa|Japón, años setenta"],
+[3,"¿Cuál es un beneficio de las auditorías informáticas periódicas?","Generar confianza interna y externa","Eliminar todo riesgo|Reducir a cero el presupuesto|Evitar la intervención de la dirección"],
+[3,"¿Cuál NO es una limitación de la auditoría informática?","Exceso de personal","Tiempo|Presupuesto|Lugar"],
+[3,"Con poco presupuesto asignado, la organización tendrá que recurrir a:","Una auditoría interna","Una auditoría gubernamental|Una auditoría de tercera parte|Cancelar la auditoría"],
+[3,"Las tres grandes áreas de la auditoría informática son:","Alrededor del computador, dentro del computador y con el computador","Física, lógica y financiera|Interna, externa y mixta|Planeación, examen e informe"],
+[3,"En el trabajo de campo, el auditor busca información con cuestionarios para emitir un juicio sustentado en:","Evidencias (hechos demostrables)","Opiniones personales|Rumores internos|Estimaciones generales"],
+[3,"La entrevista de auditoría:","Sigue un plan predeterminado, pero no es un interrogatorio automatizado","Es un interrogatorio sin plan|Sustituye por completo a los cuestionarios|La dirige exclusivamente el auditado"],
+[3,"La auditoría de sistemas de información evalúa normas, controles y procedimientos para lograr:","Confiabilidad, oportunidad, seguridad y confidencialidad","Rentabilidad, publicidad y ventas|Velocidad, diseño y color|Liquidez y solvencia"],
+[3,"¿Cuál es una preocupación fundamental con respecto a la tecnología?","La veracidad (totalidad y exactitud) de la información procesada","El color de los equipos|El número de oficinas|La marca del hardware"],
+[3,"Los accesos indebidos a través de redes aceleraron el desarrollo de:","Productos de seguridad lógica y medios criptográficos","Cámaras de vigilancia únicamente|Seguros contra incendios|Manuales de organización"],
+[3,"Las matrices de riesgo son cuadros de doble entrada donde se consideran:","Amenazas potenciales e impactos","Costos y ganancias|Proveedores y clientes|Fases y calendarios"],
+[3,"¿Cuál es un objetivo de la auditoría de sistemas?","Asesorar a la gerencia para que la toma de decisiones sea más acertada","Reemplazar al personal de informática|Fabricar hardware|Eliminar los respaldos"],
+
+[4,"¿Cuál es un objetivo de la auditoría física?","Verificar la seguridad de personal, datos, hardware, software e instalaciones","Calcular el costo de las licencias|Diseñar nuevas aplicaciones|Contratar a los usuarios"],
+[4,"La auditoría alrededor del computador se concentra en:","Planta física, accesos, cámaras, instalaciones eléctricas y dispositivos contra desastres","Solo el código fuente|Solo los estados financieros|Solo las bases de datos"],
+[4,"La auditoría alrededor del computador es la más cómoda para el auditor porque:","Verifica el control interno en un ambiente externo tangible","No requiere evidencia|No necesita informes|No involucra al personal"],
+[4,"Ante cada activo, la dirección puede decidir:","No hacer nada, minimizar el costo o minimizar la probabilidad de exposición","Venderlo, regalarlo o destruirlo|Auditarlo dos veces|Ignorar su costo de reposición"],
+[4,"Medida que se aplica DURANTE una falla:","Ejecutar un plan de contingencia adecuado","Contratar un seguro|Mantener seguridad física|Revisar auditorías previas"],
+[4,"Medida que se aplica DESPUÉS de detectar y corregir una falla:","Los contratos de seguros","El plan de contingencia|La compra de extinguidores|La rotación del personal"],
+[4,"¿Cuál es un mecanismo de protección física mencionado?","UPS, cámaras de vigilancia y sistemas biométricos de acceso","Antivirus y firewall|Cifrado de datos|Contraseñas robustas"],
+[4,"El edificio del CPD debe tener paredes:","No inflamables","De madera|De cartón yeso sin tratamiento|Sin ventilación"],
+[4,"Para evaluar la estructura del edificio, el auditor informático incluirá:","Un perito","Un contador|Un abogado|Un practicante"],
+[4,"El organigrama de la empresa permite conocer:","Las dependencias orgánicas, funcionales y jerárquicas","Las ventas por producto|Las fallas eléctricas|El inventario de respaldos"],
+[4,"CPD significa:","Centro de Procesamiento de Datos","Control de Procesos Digitales|Centro de Protección Documental|Comité de Políticas de Datos"],
+[4,"¿Cuál es un riesgo frecuente con más efectos colaterales que los temblores o tornados?","Fuego y agua","Polvo y humedad|Ruido y calor|Robo de papelería"],
+[4,"Ciertos dispositivos de almacenamiento son volátiles, por lo que una falla eléctrica puede significar:","Pérdida de datos y programas","Mayor velocidad|Menor consumo|Mejor rendimiento"],
+[4,"Según las conclusiones del capítulo 4, la organización debe contar con:","Un centro de datos alterno","Un solo CPD sin respaldo|Menos personal de seguridad|Solo seguros"],
+[4,"El auditor informático interno participa en:","La creación de planes de contingencia y la selección de equipos","Solo la emisión de facturas|La contratación de proveedores de limpieza únicamente|La venta de equipos"],
+[4,"Entre las fuentes básicas de información de un CPD están:","Políticas, normas, auditorías anteriores, contratos de seguros y de mantenimiento","Solo manuales de usuario|Redes sociales|Catálogos de marketing"]
+];
+
+var $=function(i){return document.getElementById(i)};
+var sel={1:1,2:1,3:1,4:1},cnt=20,Q=[],i=0,ok=0,miss=[];
+function shuf(a){a=a.slice();for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1)),t=a[k];a[k]=a[j];a[j]=t}return a}
+function chips(){
+  $("chips").innerHTML="";
+  for(var c in CH){(function(c){var b=document.createElement("button");b.className="chip"+(sel[c]?" on":"");b.textContent=CH[c];b.onclick=function(){sel[c]=!sel[c];chips()};$("chips").appendChild(b)})(c)}
+  $("counts").innerHTML="";
+  [10,20,40,0].forEach(function(n){var b=document.createElement("button");b.className="chip"+(cnt===n?" on":"");b.textContent=n?n:"Todas";b.onclick=function(){cnt=n;chips()};$("counts").appendChild(b)});
+}
+function start(pool){
+  if(!pool.length){alert("Elige al menos un capítulo.");return}
+  Q=shuf(pool);if(cnt&&!miss.retry)Q=Q.slice(0,cnt);
+  i=0;ok=0;miss=[];
+  $("home").classList.add("hide");$("end").classList.add("hide");$("quiz").classList.remove("hide");show();
+}
+function show(){
+  var d=Q[i],o=shuf([d[2]].concat(d[3].split("|")));
+  $("pb").style.width=(i/Q.length*100)+"%";
+  $("pn").textContent="Pregunta "+(i+1)+" de "+Q.length+" · "+CH[d[0]].split(" · ")[0];
+  $("sc").textContent="Aciertos: "+ok;
+  $("qt").textContent=d[1];$("nx").classList.add("hide");
+  $("opts").innerHTML="";
+  o.forEach(function(t){var b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=function(){pick(b,t,d)};$("opts").appendChild(b)});
+}
+function pick(b,t,d){
+  var bs=$("opts").children;
+  for(var k=0;k<bs.length;k++){bs[k].disabled=true;if(bs[k].textContent===d[2])bs[k].classList.add("ok")}
+  if(t===d[2])ok++;else{b.classList.add("no");miss.push({d:d,t:t})}
+  $("sc").textContent="Aciertos: "+ok;
+  $("nx").textContent=i===Q.length-1?"Ver resultado":"Siguiente";$("nx").classList.remove("hide");
+}
+function finish(){
+  $("quiz").classList.add("hide");$("end").classList.remove("hide");
+  var p=Math.round(ok/Q.length*100);
+  $("res").textContent=ok+" / "+Q.length+" · "+p+"%";
+  $("msg").textContent=p>=90?"Excelente dominio del material.":p>=70?"Muy bien, repasa las falladas.":"Sigue practicando, repite las falladas.";
+  $("retry").classList[miss.length?"remove":"add"]("hide");
+  $("rv").innerHTML="";
+  miss.forEach(function(m){var e=document.createElement("div");e.className="rev";
+    var a=document.createElement("b");a.textContent=m.d[1];
+    var g=document.createElement("span");g.className="g";g.textContent="✓ "+m.d[2];
+    var r=document.createElement("span");r.className="b";r.textContent="✗ "+m.t;
+    e.appendChild(a);e.appendChild(g);e.appendChild(document.createElement("br"));e.appendChild(r);$("rv").appendChild(e)});
+}
+$("go").onclick=function(){miss.retry=false;start(D.filter(function(d){return sel[d[0]]}))};
+$("nx").onclick=function(){if(i===Q.length-1)finish();else{i++;show()}};
+$("again").onclick=function(){$("end").classList.add("hide");$("home").classList.remove("hide")};
+$("retry").onclick=function(){var p=miss.map(function(m){return m.d});miss=[];miss.retry=true;start(p)};
+chips();
+</script>
+</body>
+</html>
